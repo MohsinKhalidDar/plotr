@@ -11,41 +11,73 @@ gridToggle.addEventListener("click", () => {
 
 /* ---------------- SAFE NORMALIZATION ---------------- */
 /* Minimal, conservative, never breaks valid math.js */
-function normalize(expr) {
+ function normalize(expr) {
   if (!expr) return expr;
 
   return expr
-    // remove spaces
+    // 1. remove spaces
     .replace(/\s+/g, "")
 
-    // unicode powers
+    // 2. unicode powers
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
 
-    // square root
+    // 3. constants
+    .replace(/\bpi\b/gi, "pi")
+    .replace(/\be\b/g, "e")
+
+    // 4. absolute value
+    .replace(/\|\|([^|]+)\|\|/g, "abs(abs($1))")
+    .replace(/\|([^|]+)\|/g, "abs($1)")
+
+    // 5. square root
     .replace(/√\(([^)]+)\)/g, "sqrt($1)")
     .replace(/√([a-zA-Z0-9]+)/g, "sqrt($1)")
 
-    // absolute value
-    .replace(/\|([^|]+)\|/g, "abs($1)")
-
-    // inverse trig (human form)
+    // 6. inverse trig
     .replace(/sin\^-1|sin⁻¹/gi, "asin")
     .replace(/cos\^-1|cos⁻¹/gi, "acos")
     .replace(/tan\^-1|tan⁻¹/gi, "atan")
 
-    // e^(...) → exp(...)
-    .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
+    // 7. trig power: sin^2(x) → (sin(x))^2
+    .replace(/(sin|cos|tan)\^([0-9]+)\(([^)]+)\)/gi, "($1($3))^$2")
+    .replace(/(sin|cos|tan)\^([0-9]+)([a-zA-Z])/gi, "($1($3))^$2")
 
-    // e^x → exp(x)
+    // 8. exponential
+    .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
     .replace(/e\^([a-zA-Z0-9]+)/gi, "exp($1)")
 
-    // implicit multiplication: 2x → 2*x
+    // 9. ln → log
+    .replace(/\bln\b/gi, "log")
+
+    // 10. sinx → sin(x)
+    .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|exp)([a-zA-Z0-9]+)\b/gi, "$1($2)")
+
+    // 11. number-function: 2sinx → 2*sin(x)
+    .replace(/(\d)(sin|cos|tan|log|exp)/gi, "$1*$2")
+
+    // 12. number-variable
     .replace(/(\d)([a-zA-Z])/g, "$1*$2")
 
-    // FIX: x(x+1) → x*(x+1)
-    .replace(/([a-zA-Z0-9])\(/g, "$1*(");
+    // 13. power-variable: x^2y
+    .replace(/(\^[0-9]+)([a-zA-Z])/g, "$1*$2")
+
+    // 14. variable-constant
+    .replace(/([a-zA-Z])(pi|e)\b/g, "$1*$2")
+
+    // 15. variable-abs: x|x|
+    .replace(/([a-zA-Z])abs/g, "$1*abs")
+
+    // 16. variable-parenthesis
+    .replace(/([a-zA-Z])\(/g, "$1*(")
+
+    // 17. parenthesis-variable
+    .replace(/\)([a-zA-Z])/g, ")*$1")
+
+    // 18. parenthesis-parenthesis
+    .replace(/\)\(/g, ")*(");
 }
+
 
 /* ---------------- MAIN PLOT FUNCTION ---------------- */
 function plot() {
