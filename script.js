@@ -24,7 +24,6 @@ gridToggle.addEventListener("click", () => {
 
     // 3. constants
     .replace(/\bpi\b/gi, "pi")
-    .replace(/\be\b/g, "e")
 
     // 4. absolute value
     .replace(/\|\|([^|]+)\|\|/g, "abs(abs($1))")
@@ -39,9 +38,8 @@ gridToggle.addEventListener("click", () => {
     .replace(/cos\^-1|cos⁻¹/gi, "acos")
     .replace(/tan\^-1|tan⁻¹/gi, "atan")
 
-    // 7. trig power: sin^2(x) → (sin(x))^2
+    // 7. trig power: sin^2(x) → (sin(x))^2   (SAFE FORM ONLY)
     .replace(/(sin|cos|tan)\^([0-9]+)\(([^)]+)\)/gi, "($1($3))^$2")
-    .replace(/(sin|cos|tan)\^([0-9]+)([a-zA-Z])/gi, "($1($3))^$2")
 
     // 8. exponential
     .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
@@ -53,28 +51,29 @@ gridToggle.addEventListener("click", () => {
     // 10. sinx → sin(x)
     .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|exp)([a-zA-Z0-9]+)\b/gi, "$1($2)")
 
-    // 11. number-function: 2sinx → 2*sin(x)
-    .replace(/(\d)(sin|cos|tan|log|exp)/gi, "$1*$2")
+    // 11. number-function: 2sin(x) → 2*sin(x)
+    .replace(/(\d)(sin|cos|tan|log|exp|sqrt|abs)/gi, "$1*$2")
 
-    // 12. number-variable
+    // 12. number-variable: 2x → 2*x
     .replace(/(\d)([a-zA-Z])/g, "$1*$2")
 
-    // 13. power-variable: x^2y
+    // 13. power-variable: x^2y → x^2*y
     .replace(/(\^[0-9]+)([a-zA-Z])/g, "$1*$2")
 
-    // 14. variable-constant
-    .replace(/([a-zA-Z])(pi|e)\b/g, "$1*$2")
+    // 14. variable-constant: xpi → x*pi
+    .replace(/([a-zA-Z])(pi)\b/gi, "$1*$2")
 
-    // 15. variable-abs: x|x|
+    // 15. variable-abs: x|x| → x*abs(x)
     .replace(/([a-zA-Z])abs/g, "$1*abs")
 
-    // 16. variable-parenthesis
-    .replace(/([a-zA-Z])\(/g, "$1*(")
+    // 16. SAFE variable-parenthesis: x(x+1) → x*(x+1)
+    // only variables, NOT function names
+    .replace(/(\d|x|y)\(/g, "$1*(")
 
-    // 17. parenthesis-variable
+    // 17. parenthesis-variable: (x+1)x → (x+1)*x
     .replace(/\)([a-zA-Z])/g, ")*$1")
 
-    // 18. parenthesis-parenthesis
+    // 18. parenthesis-parenthesis: )( → )*(
     .replace(/\)\(/g, ")*(");
 }
 
