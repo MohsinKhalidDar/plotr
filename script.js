@@ -1,5 +1,6 @@
 const textarea = document.getElementById("equations");
 const gridToggle = document.getElementById("gridToggle");
+
 let gridOn = true;
 
 textarea.addEventListener("input", plotLive);
@@ -8,40 +9,44 @@ gridToggle.addEventListener("click", () => {
   plotLive();
 });
 
-/* ---------- UNIVERSAL NORMALIZER ---------- */
+/* ---------- SAFE NORMALIZER ---------- */
 function normalizeExpression(expr) {
   return expr
+    // remove spaces
     .replace(/\s+/g, "")
 
-    // Unicode powers
+    // unicode powers
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
 
-    // Square root
-    .replace(/√/g, "sqrt")
+    // square root
+    .replace(/√/g, "sqrt(")
+    .replace(/sqrt\(([^)]+)\)/g, "sqrt($1)")
 
-    // Absolute value |x|
+    // absolute value |x|
     .replace(/\|([^|]+)\|/g, "abs($1)")
 
-    // Inverse trig (human forms)
+    // inverse trig (human forms)
     .replace(/sin\^-1|sin⁻¹|arcsin/gi, "asin")
     .replace(/cos\^-1|cos⁻¹|arccos/gi, "acos")
     .replace(/tan\^-1|tan⁻¹|arctan/gi, "atan")
 
-    // Trig without parentheses: sinx → sin(x)
+    // trig without parentheses: sinx → sin(x)
     .replace(/(sin|cos|tan|asin|acos|atan)([a-zA-Z0-9]+)/gi, "$1($2)")
 
-    // Logs
+    // logarithms
     .replace(/ln/gi, "log")
 
-    // Exponential
-    .replace(/e\^/gi, "exp")
+    // exponential
+    .replace(/e\^/gi, "exp(")
+    .replace(/exp\(([^)]+)\)/g, "exp($1)")
 
-    // Implicit multiplication
+    // implicit multiplication ONLY between number & variable
     .replace(/(\d)([a-zA-Z])/g, "$1*$2")
     .replace(/([a-zA-Z])(\d)/g, "$1*$2")
-    .replace(/\)\(/g, ")*(")
-    .replace(/([a-zA-Z])\(/g, "$1*(");
+
+    // (x)(y) → (x)*(y)
+    .replace(/\)\(/g, ")*(");
 }
 
 /* ---------- MAIN PLOT ---------- */
@@ -56,8 +61,9 @@ function plotLive() {
     try {
       // IMPLICIT
       if (line.startsWith("implicit:")) {
-        let expr = line.replace("implicit:", "").trim();
-        expr = normalizeExpression(expr);
+        let expr = normalizeExpression(
+          line.replace("implicit:", "")
+        );
 
         const xs = [], ys = [], z = [];
         for (let i = -10; i <= 10; i += 0.25) {
@@ -99,13 +105,16 @@ function plotLive() {
           x: xs,
           y: ys,
           mode: "lines",
-          hovertemplate: "x = %{x:.2f}<br>y = %{y:.2f}<extra></extra>"
+          hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>"
         });
       }
 
       // NORMAL
       else {
-        let expr = line.includes("=") ? line.split("=")[1] : line;
+        let expr = line.includes("=")
+          ? line.split("=")[1]
+          : line;
+
         expr = normalizeExpression(expr);
 
         const xs = [], ys = [];
@@ -122,10 +131,12 @@ function plotLive() {
           x: xs,
           y: ys,
           mode: "lines",
-          hovertemplate: "x = %{x:.2f}<br>y = %{y:.2f}<extra></extra>"
+          hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>"
         });
       }
-    } catch {}
+    } catch (e) {
+      console.error("Plot error:", e);
+    }
   });
 
   Plotly.newPlot(
@@ -146,3 +157,4 @@ function plotLive() {
 
 plotLive();
 document.getElementById("year").textContent = new Date().getFullYear();
+
