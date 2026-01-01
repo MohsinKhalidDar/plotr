@@ -1,112 +1,116 @@
 const textarea = document.getElementById("equations");
 const gridToggle = document.getElementById("gridToggle");
-const degToggle = document.getElementById("degToggle");
-const slidersDiv = document.getElementById("sliders");
-const parsedBox = document.getElementById("parsed");
 
 let gridOn = true;
-let useDegrees = false;
-let params = { a: 1, b: 1, c: 0, k: 1 };
 
-gridToggle.onclick = () => (gridOn = !gridOn, plot());
-degToggle.onchange = () => (useDegrees = degToggle.checked, plot());
 textarea.addEventListener("input", plot);
+gridToggle.addEventListener("click", () => {
+  gridOn = !gridOn;
+  plot();
+});
 
-/* ---------- SAFE NORMALIZATION ---------- */
+/* =====================================================
+   HUMAN → MATH.JS NORMALIZATION
+   (Conservative, safe, extensible)
+===================================================== */
 function normalize(expr) {
+  if (!expr) return expr;
+
   return expr
+    // remove spaces
     .replace(/\s+/g, "")
+
+    // unicode powers
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
+
+    // square root
     .replace(/√\(([^)]+)\)/g, "sqrt($1)")
     .replace(/√([a-zA-Z0-9]+)/g, "sqrt($1)")
+
+    // absolute value |x|
     .replace(/\|([^|]+)\|/g, "abs($1)")
-    .replace(/sin\^-1|sin⁻¹/gi, "asin")
-    .replace(/cos\^-1|cos⁻¹/gi, "acos")
-    .replace(/tan\^-1|tan⁻¹/gi, "atan")
+
+    // inverse trig aliases
+    .replace(/sin\^-1|sin⁻¹|arcsin/gi, "asin")
+    .replace(/cos\^-1|cos⁻¹|arccos/gi, "acos")
+    .replace(/tan\^-1|tan⁻¹|arctan/gi, "atan")
+
+    // exponential e^x → exp(x)
     .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
     .replace(/e\^([a-zA-Z0-9]+)/gi, "exp($1)")
+
+    // natural log alias
     .replace(/\bln\b/gi, "log")
+
+    // implicit multiplication: 2x → 2*x
     .replace(/(\d)([a-zA-Z])/g, "$1*$2")
+
+    // (x)(y) → (x)*(y)
     .replace(/\)\(/g, ")*(");
 }
 
-/* ---------- DEGREE HANDLING ---------- */
-function trig(expr) {
-  if (!useDegrees) return expr;
-  return expr
-    .replace(/sin\(/g, "sin(pi/180*")
-    .replace(/cos\(/g, "cos(pi/180*")
-    .replace(/tan\(/g, "tan(pi/180*");
-}
-
-/* ---------- SLIDERS ---------- */
-function buildSliders(expr) {
-  slidersDiv.innerHTML = "";
-  const vars = [...new Set(expr.match(/[abck]/g) || [])];
-  vars.forEach(v => {
-    slidersDiv.innerHTML += `
-      <div>
-        ${v}:
-        <input type="range" min="-5" max="5" step="0.1"
-        value="${params[v]}"
-        oninput="params['${v}']=this.value; plot()">
-        ${params[v]}
-      </div>`;
-  });
-}
-
-/* ---------- MAIN PLOT ---------- */
+/* =====================================================
+   MAIN PLOTTING LOGIC
+===================================================== */
 function plot() {
   const lines = textarea.value.split("\n");
   const traces = [];
-  parsedBox.textContent = "";
 
-  lines.forEach((line, idx) => {
+  lines.forEach(line => {
     line = line.trim();
     if (!line) return;
 
     try {
-      /* PARAMETRIC */
+      /* ---------- PARAMETRIC ---------- */
       if (line.startsWith("parametric:")) {
-        const p = line.replace("parametric:", "").split(",");
-        let fx = trig(normalize(p[0].split("=")[1]));
-        let fy = trig(normalize(p[1].split("=")[1]));
-        buildSliders(fx + fy);
-        parsedBox.textContent += `Line ${idx + 1}: ${fx}, ${fy}\n`;
+        const parts = line.replace("parametric:", "").split(",");
+        if (parts.length < 2) return;
+
+        const fx = normalize(parts[0].split("=")[1]);
+        const fy = normalize(parts[1].split("=")[1]);
 
         const xs = [], ys = [];
         for (let t = -10; t <= 10; t += 0.05) {
-          xs.push(math.evaluate(fx, { t, ...params }));
-          ys.push(math.evaluate(fy, { t, ...params }));
+          xs.push(math.evaluate(fx, { t }));
+          ys.push(math.evaluate(fy, { t }));
         }
-        traces.push({ x: xs, y: ys, mode: "lines" });
+
+        traces.push({
+          x: xs,
+          y: ys,
+          mode: "lines",
+          hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>"
+        });
       }
 
-      /* y = f(x) */
+      /* ---------- y = f(x) ---------- */
       else if (line.startsWith("y")) {
-        let expr = trig(normalize(line.split("=")[1]));
-        buildSliders(expr);
-        parsedBox.textContent += `Line ${idx + 1}: ${expr}\n`;
-
+        const expr = normalize(line.split("=")[1]);
         const xs = [], ys = [];
+
         for (let x = -10; x <= 10; x += 0.05) {
           xs.push(x);
           try {
-            ys.push(math.evaluate(expr, { x, ...params }));
+            ys.push(math.evaluate(expr, { x }));
           } catch {
             ys.push(null);
           }
         }
-        traces.push({ x: xs, y: ys, mode: "lines" });
+
+        traces.push({
+          x: xs,
+          y: ys,
+          mode: "lines",
+          hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>"
+        });
       }
 
-      /* INEQUALITY */
-      else if (/[<>]=?/.test(line)) {
-        const expr = normalize(line.replace(/[<>]=?/, "-(") + ")");
-        parsedBox.textContent += `Line ${idx + 1}: ${expr}\n`;
-
+      /* ---------- IMPLICIT ---------- */
+      else if (line.includes("=")) {
+        const expr = normalize(line.replace("=", "-(") + ")");
         const xs = [], ys = [], z = [];
+
         for (let i = -10; i <= 10; i += 0.3) {
           xs.push(i);
           ys.push(i);
@@ -114,5 +118,47 @@ function plot() {
 
         for (let x of xs) {
           const row = [];
-          for (let y
+          for (let y of ys) {
+            try {
+              row.push(math.evaluate(expr, { x, y }));
+            } catch {
+              row.push(null);
+            }
+          }
+          z.push(row);
+        }
+
+        traces.push({
+          x: xs,
+          y: ys,
+          z,
+          type: "contour",
+          contours: { coloring: "lines" },
+          showscale: false
+        });
+      }
+    } catch {
+      // ignore invalid equations safely
+    }
+  });
+
+  Plotly.newPlot(
+    "graph",
+    traces,
+    {
+      paper_bgcolor: "#0b1020",
+      plot_bgcolor: "#0b1020",
+      font: { color: "#e5e7eb" },
+      hovermode: "closest",
+      margin: { t: 20 },
+      xaxis: { showgrid: gridOn, showspikes: false },
+      yaxis: { showgrid: gridOn, showspikes: false }
+    },
+    { responsive: true, displaylogo: false }
+  );
+}
+
+/* initial render */
+plot();
+document.getElementById("year").textContent = new Date().getFullYear();
 
