@@ -1,6 +1,6 @@
 # 📈 Plotr
 
-Plotr is a Desmos-inspired interactive graphing calculator built with JavaScript, Plotly.js, and math.js.
+Plotr is a Desmos-inspired interactive graph calculator built with JavaScript, Plotly.js, and math.js.
 
 
 ![Plotr UI](https://raw.githubusercontent.com/MohsinKhalidDar/plotr/main/screenshots/plotr-ui.png.png)
