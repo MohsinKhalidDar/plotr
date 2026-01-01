@@ -41,7 +41,10 @@ function normalize(expr) {
     .replace(/e\^([a-zA-Z0-9]+)/gi, "exp($1)")
 
     // implicit multiplication: 2x → 2*x
-    .replace(/(\d)([a-zA-Z])/g, "$1*$2");
+    .replace(/(\d)([a-zA-Z])/g, "$1*$2")
+
+    // FIX: x(x+1) → x*(x+1)
+    .replace(/([a-zA-Z0-9])\(/g, "$1*(");
 }
 
 /* ---------------- MAIN PLOT FUNCTION ---------------- */
