@@ -1,14 +1,13 @@
-## 🖼️ Screenshot
-
-![Plotr UI](https://raw.githubusercontent.com/MohsinKhalidDar/plotr/main/screenshots/plotr-ui.png.png)
-
-
----
 # 📈 Plotr
 
 Plotr is a Desmos-inspired interactive graphing calculator built with JavaScript, Plotly.js, and math.js.
 
-## Features
+
+![Plotr UI](https://raw.githubusercontent.com/MohsinKhalidDar/plotr/main/screenshots/plotr-ui.png.png)
+
+---
+
+## ✨ Features
 - Explicit, implicit & parametric plots
 - Live graph updates
 - Grid toggle
@@ -16,8 +15,9 @@ Plotr is a Desmos-inspired interactive graphing calculator built with JavaScript
 - Custom tooltip
 - Dark UI
 
-## Live Demo
+## 🚀 Live Demo
 https://MohsinKhalidDar.github.io/plotr/
 
-## License
+## 📄 License
 MIT License © Mohsin Khalid Dar
+
