@@ -9,10 +9,8 @@ gridToggle.addEventListener("click", () => {
   plot();
 });
 
-/* =====================================================
-   HUMAN → MATH.JS NORMALIZATION
-   (Conservative, safe, extensible)
-===================================================== */
+/* ---------------- SAFE NORMALIZATION ---------------- */
+/* Minimal, conservative, never breaks valid math.js */
 function normalize(expr) {
   if (!expr) return expr;
 
@@ -28,31 +26,25 @@ function normalize(expr) {
     .replace(/√\(([^)]+)\)/g, "sqrt($1)")
     .replace(/√([a-zA-Z0-9]+)/g, "sqrt($1)")
 
-    // absolute value |x|
+    // absolute value
     .replace(/\|([^|]+)\|/g, "abs($1)")
 
-    // inverse trig aliases
-    .replace(/sin\^-1|sin⁻¹|arcsin/gi, "asin")
-    .replace(/cos\^-1|cos⁻¹|arccos/gi, "acos")
-    .replace(/tan\^-1|tan⁻¹|arctan/gi, "atan")
+    // inverse trig (human form)
+    .replace(/sin\^-1|sin⁻¹/gi, "asin")
+    .replace(/cos\^-1|cos⁻¹/gi, "acos")
+    .replace(/tan\^-1|tan⁻¹/gi, "atan")
 
-    // exponential e^x → exp(x)
+    // e^(...) → exp(...)
     .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
+
+    // e^x → exp(x)
     .replace(/e\^([a-zA-Z0-9]+)/gi, "exp($1)")
 
-    // natural log alias
-    .replace(/\bln\b/gi, "log")
-
     // implicit multiplication: 2x → 2*x
-    .replace(/(\d)([a-zA-Z])/g, "$1*$2")
-
-    // (x)(y) → (x)*(y)
-    .replace(/\)\(/g, ")*(");
+    .replace(/(\d)([a-zA-Z])/g, "$1*$2");
 }
 
-/* =====================================================
-   MAIN PLOTTING LOGIC
-===================================================== */
+/* ---------------- MAIN PLOT FUNCTION ---------------- */
 function plot() {
   const lines = textarea.value.split("\n");
   const traces = [];
@@ -85,10 +77,10 @@ function plot() {
       }
 
       /* ---------- y = f(x) ---------- */
-      else if (line.startsWith("y")) {
-        const expr = normalize(line.split("=")[1]);
-        const xs = [], ys = [];
+      else if (line.includes("=") && line.startsWith("y")) {
+        let expr = normalize(line.split("=")[1]);
 
+        const xs = [], ys = [];
         for (let x = -10; x <= 10; x += 0.05) {
           xs.push(x);
           try {
@@ -106,11 +98,13 @@ function plot() {
         });
       }
 
-      /* ---------- IMPLICIT ---------- */
+      /* ---------- IMPLICIT (x^2 + y^2 = 4) ---------- */
       else if (line.includes("=")) {
-        const expr = normalize(line.replace("=", "-(") + ")");
-        const xs = [], ys = [], z = [];
+        const expr = normalize(
+          line.replace("=", "-(") + ")"
+        );
 
+        const xs = [], ys = [], z = [];
         for (let i = -10; i <= 10; i += 0.3) {
           xs.push(i);
           ys.push(i);
@@ -138,7 +132,7 @@ function plot() {
         });
       }
     } catch {
-      // ignore invalid equations safely
+      // Ignore invalid equations safely
     }
   });
 
@@ -158,7 +152,7 @@ function plot() {
   );
 }
 
-/* initial render */
+/* Initial render */
 plot();
 document.getElementById("year").textContent = new Date().getFullYear();
 
