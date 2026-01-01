@@ -1,59 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Plotr</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
 
+  <!-- Plotly -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <!-- Math.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <header>
-    <div class="brand">
-      <img src="logo.svg" alt="Plotr">
-      <div>
-        <h1>Plotr</h1>
-        <span>Interactive Equation Visualizer</span>
-      </div>
+    <div class="logo">
+      <img src="logo.svg" alt="Plotr logo" />
     </div>
 
-    <div class="controls">
-      <label>
-        <input type="checkbox" id="degToggle">
-        Degrees
-      </label>
-      <button id="gridToggle">▦</button>
+    <div class="title">
+      <h1>Plotr</h1>
+      <span>Interactive Equation Visualizer</span>
     </div>
+
+    <button id="gridToggle" title="Toggle grid">▦</button>
   </header>
 
-  <section class="editor">
-    <textarea id="equations" spellcheck="false"
-      placeholder="
-write equations here...........
-      
-Examples:
-      
-y = a*sin(bx + c)
-y = e^x
-x^2 + y^2 = 4
-y = x^2 < 4
-parametric: x = cos(t), y = sin(t)
-"></textarea>
-  </section>
+  <main class="content">
+    <section class="panel">
+      <label class="editor-label">Equation Editor</label>
+      <textarea
+        id="equations"
+        spellcheck="false"
+        placeholder="Write equations here….......
 
-  <section id="sliders"></section>
-  <pre id="parsed"></pre>
+y = sin x
+y = sin⁻¹(x)
+y = 2x(x+1)
+y = √(1-x²)
+x² + y² = 4
+"
+      ></textarea>
+    </section>
 
-  <div id="graph"></div>
+    <div id="graph"></div>
+  </main>
 
   <footer>
-    © <span id="year"></span> Mohsin Khalid Dar · MIT License
+    © <span id="year"></span> Mohsin Khalid Dar ·
+    <a href="https://github.com/MohsinKhalidDar/plotr" target="_blank">GitHub</a>
+    · MIT License
   </footer>
 
   <script src="script.js"></script>
