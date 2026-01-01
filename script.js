@@ -1,160 +1,118 @@
 const textarea = document.getElementById("equations");
 const gridToggle = document.getElementById("gridToggle");
+const degToggle = document.getElementById("degToggle");
+const slidersDiv = document.getElementById("sliders");
+const parsedBox = document.getElementById("parsed");
 
 let gridOn = true;
+let useDegrees = false;
+let params = { a: 1, b: 1, c: 0, k: 1 };
 
-textarea.addEventListener("input", plotLive);
-gridToggle.addEventListener("click", () => {
-  gridOn = !gridOn;
-  plotLive();
-});
+gridToggle.onclick = () => (gridOn = !gridOn, plot());
+degToggle.onchange = () => (useDegrees = degToggle.checked, plot());
+textarea.addEventListener("input", plot);
 
-/* ---------- SAFE NORMALIZER ---------- */
-function normalizeExpression(expr) {
+/* ---------- SAFE NORMALIZATION ---------- */
+function normalize(expr) {
   return expr
-    // remove spaces
     .replace(/\s+/g, "")
-
-    // unicode powers
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
-
-    // square root
-    .replace(/√/g, "sqrt(")
-    .replace(/sqrt\(([^)]+)\)/g, "sqrt($1)")
-
-    // absolute value |x|
+    .replace(/√\(([^)]+)\)/g, "sqrt($1)")
+    .replace(/√([a-zA-Z0-9]+)/g, "sqrt($1)")
     .replace(/\|([^|]+)\|/g, "abs($1)")
-
-    // inverse trig (human forms)
-    .replace(/sin\^-1|sin⁻¹|arcsin/gi, "asin")
-    .replace(/cos\^-1|cos⁻¹|arccos/gi, "acos")
-    .replace(/tan\^-1|tan⁻¹|arctan/gi, "atan")
-
-    // trig without parentheses: sinx → sin(x)
-    .replace(/(sin|cos|tan|asin|acos|atan)([a-zA-Z0-9]+)/gi, "$1($2)")
-
-    // logarithms
-    .replace(/ln/gi, "log")
-
-    // exponential
-    .replace(/e\^/gi, "exp(")
-    .replace(/exp\(([^)]+)\)/g, "exp($1)")
-
-    // implicit multiplication ONLY between number & variable
+    .replace(/sin\^-1|sin⁻¹/gi, "asin")
+    .replace(/cos\^-1|cos⁻¹/gi, "acos")
+    .replace(/tan\^-1|tan⁻¹/gi, "atan")
+    .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
+    .replace(/e\^([a-zA-Z0-9]+)/gi, "exp($1)")
+    .replace(/\bln\b/gi, "log")
     .replace(/(\d)([a-zA-Z])/g, "$1*$2")
-    .replace(/([a-zA-Z])(\d)/g, "$1*$2")
-
-    // (x)(y) → (x)*(y)
     .replace(/\)\(/g, ")*(");
 }
 
+/* ---------- DEGREE HANDLING ---------- */
+function trig(expr) {
+  if (!useDegrees) return expr;
+  return expr
+    .replace(/sin\(/g, "sin(pi/180*")
+    .replace(/cos\(/g, "cos(pi/180*")
+    .replace(/tan\(/g, "tan(pi/180*");
+}
+
+/* ---------- SLIDERS ---------- */
+function buildSliders(expr) {
+  slidersDiv.innerHTML = "";
+  const vars = [...new Set(expr.match(/[abck]/g) || [])];
+  vars.forEach(v => {
+    slidersDiv.innerHTML += `
+      <div>
+        ${v}:
+        <input type="range" min="-5" max="5" step="0.1"
+        value="${params[v]}"
+        oninput="params['${v}']=this.value; plot()">
+        ${params[v]}
+      </div>`;
+  });
+}
+
 /* ---------- MAIN PLOT ---------- */
-function plotLive() {
+function plot() {
   const lines = textarea.value.split("\n");
   const traces = [];
+  parsedBox.textContent = "";
 
-  lines.forEach(line => {
+  lines.forEach((line, idx) => {
     line = line.trim();
     if (!line) return;
 
     try {
-      // IMPLICIT
-      if (line.startsWith("implicit:")) {
-        let expr = normalizeExpression(
-          line.replace("implicit:", "")
-        );
+      /* PARAMETRIC */
+      if (line.startsWith("parametric:")) {
+        const p = line.replace("parametric:", "").split(",");
+        let fx = trig(normalize(p[0].split("=")[1]));
+        let fy = trig(normalize(p[1].split("=")[1]));
+        buildSliders(fx + fy);
+        parsedBox.textContent += `Line ${idx + 1}: ${fx}, ${fy}\n`;
+
+        const xs = [], ys = [];
+        for (let t = -10; t <= 10; t += 0.05) {
+          xs.push(math.evaluate(fx, { t, ...params }));
+          ys.push(math.evaluate(fy, { t, ...params }));
+        }
+        traces.push({ x: xs, y: ys, mode: "lines" });
+      }
+
+      /* y = f(x) */
+      else if (line.startsWith("y")) {
+        let expr = trig(normalize(line.split("=")[1]));
+        buildSliders(expr);
+        parsedBox.textContent += `Line ${idx + 1}: ${expr}\n`;
+
+        const xs = [], ys = [];
+        for (let x = -10; x <= 10; x += 0.05) {
+          xs.push(x);
+          try {
+            ys.push(math.evaluate(expr, { x, ...params }));
+          } catch {
+            ys.push(null);
+          }
+        }
+        traces.push({ x: xs, y: ys, mode: "lines" });
+      }
+
+      /* INEQUALITY */
+      else if (/[<>]=?/.test(line)) {
+        const expr = normalize(line.replace(/[<>]=?/, "-(") + ")");
+        parsedBox.textContent += `Line ${idx + 1}: ${expr}\n`;
 
         const xs = [], ys = [], z = [];
-        for (let i = -10; i <= 10; i += 0.25) {
+        for (let i = -10; i <= 10; i += 0.3) {
           xs.push(i);
           ys.push(i);
         }
 
         for (let x of xs) {
           const row = [];
-          for (let y of ys) {
-            row.push(math.evaluate(expr, { x, y }));
-          }
-          z.push(row);
-        }
-
-        traces.push({
-          x: xs,
-          y: ys,
-          z,
-          type: "contour",
-          contours: { coloring: "lines" },
-          showscale: false
-        });
-      }
-
-      // PARAMETRIC
-      else if (line.startsWith("parametric:")) {
-        const parts = line.replace("parametric:", "").split(",");
-        let fx = normalizeExpression(parts[0].split("=")[1]);
-        let fy = normalizeExpression(parts[1].split("=")[1]);
-
-        const xs = [], ys = [];
-        for (let t = -10; t <= 10; t += 0.05) {
-          xs.push(math.evaluate(fx, { t }));
-          ys.push(math.evaluate(fy, { t }));
-        }
-
-        traces.push({
-          x: xs,
-          y: ys,
-          mode: "lines",
-          hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>"
-        });
-      }
-
-      // NORMAL
-      else {
-        let expr = line.includes("=")
-          ? line.split("=")[1]
-          : line;
-
-        expr = normalizeExpression(expr);
-
-        const xs = [], ys = [];
-        for (let x = -10; x <= 10; x += 0.05) {
-          xs.push(x);
-          try {
-            ys.push(math.evaluate(expr, { x }));
-          } catch {
-            ys.push(null);
-          }
-        }
-
-        traces.push({
-          x: xs,
-          y: ys,
-          mode: "lines",
-          hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>"
-        });
-      }
-    } catch (e) {
-      console.error("Plot error:", e);
-    }
-  });
-
-  Plotly.newPlot(
-    "graph",
-    traces,
-    {
-      paper_bgcolor: "#0b1020",
-      plot_bgcolor: "#0b1020",
-      font: { color: "#e5e7eb" },
-      hovermode: "closest",
-      margin: { t: 20 },
-      xaxis: { showgrid: gridOn, showspikes: false },
-      yaxis: { showgrid: gridOn, showspikes: false }
-    },
-    { responsive: true, displaylogo: false }
-  );
-}
-
-plotLive();
-document.getElementById("year").textContent = new Date().getFullYear();
+          for (let y
 
