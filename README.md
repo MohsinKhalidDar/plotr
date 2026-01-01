@@ -1,6 +1,6 @@
 ## 🖼️ Screenshot
 
-![Plotr UI](screenshots/plotr-ui.png)
+![Plotr UI](https://raw.githubusercontent.com/MohsinKhalidDar/plotr/main/screenshots/plotr-ui.png)
 
 ---
 # 📈 Plotr
