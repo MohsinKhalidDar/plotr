@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Plotr</title>
+  <title>Plotr · Interactive Equation Visualizer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Plotr is a Desmos-inspired interactive equation visualizer for explicit, implicit, and parametric graphs."
+  />
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
@@ -20,7 +24,7 @@
 <body>
   <header>
     <div class="logo">
-      <img src="logo.svg" alt="Plotr logo" />
+      <img src="logo.svg" alt="Plotr – Interactive Equation Visualizer logo" />
     </div>
 
     <div class="title">
@@ -28,46 +32,40 @@
       <span>Interactive Equation Visualizer</span>
     </div>
 
-    <button id="gridToggle" title="Toggle grid">▦</button>
+    <button
+      id="gridToggle"
+      title="Toggle grid"
+      aria-label="Toggle graph grid"
+    >
+      ▦
+    </button>
   </header>
 
   <main class="content">
     <section class="panel">
       <label class="editor-label">Equation Editor</label>
+
       <textarea
         id="equations"
         spellcheck="false"
-        placeholder="Write equations here….......
-
-Type one equation per line
+        autocapitalize="off"
+        autocomplete="off"
+        autocorrect="off"
+        placeholder="Write equations here…
 
 EXPLICIT:
 y = 2x(x+1)
 y = sin(x)
-y = sin x
 y = e^x
-y = √(1-x^2)
 y = |x|
 
 IMPLICIT:
 x^2 + y^2 = 4
-x^2 + y^2 < 9
 
 PARAMETRIC:
 parametric: x = cos(t), y = sin(t)
 
-FUNCTIONS:
-sin cos tan
-asin acos atan
-log ln exp
-sqrt abs
-pi e
-
-IMPLICIT MULTIPLICATION SUPPORTED:
-2x, x(x+1), (x+1)(x-1), 2sin x
-
-Graphs update instantly.
-"
+Graphs update instantly."
       ></textarea>
     </section>
 
@@ -76,7 +74,11 @@ Graphs update instantly.
 
   <footer>
     © <span id="year"></span> Mohsin Khalid Dar ·
-    <a href="https://github.com/MohsinKhalidDar/plotr" target="_blank">GitHub</a>
+    <a
+      href="https://github.com/MohsinKhalidDar/plotr"
+      target="_blank"
+      rel="noopener"
+    >GitHub</a>
     · MIT License
   </footer>
 
