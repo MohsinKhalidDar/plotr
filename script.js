@@ -120,15 +120,23 @@ function plot() {
       try {
         const y = math.evaluate(expr, { x });
 
+    // Detect tan(x) specifically
+    const hasTan = /(^|[^a-z])tan([^a-z]|$)/i.test(expr);
+    
+    if (x === 0) console.log(expr, hasTan);
+   
+
     // Break curve at asymptotes / discontinuities
-        if ( !Number.isFinite(y) ||
-            Math.abs(y) > 10 ||
-            Math.abs(Math.cos(x)) < 0.02
-        ) {
-          ys.push(null);
-       } else {
-         ys.push(y);
-       }
+    if (
+      !Number.isFinite(y) ||
+      Math.abs(y) > 10 ||
+     (hasTan && Math.abs(Math.cos(x)) < 0.02)
+    ) {
+      ys.push(null);
+    } else {
+     ys.push(y);
+    }
+
      } catch {
       ys.push(null);
      }
