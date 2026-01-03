@@ -15,30 +15,46 @@ function normalize(expr) {
   if (!expr) return expr;
 
   return expr
+    // whitespace & powers
     .replace(/\s+/g, "")
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
+
+    // constants
     .replace(/\bpi\b/gi, "pi")
 
+    // absolute value
     .replace(/\|\|([^|]+)\|\|/g, "abs(abs($1))")
     .replace(/\|([^|]+)\|/g, "abs($1)")
 
+    // roots
     .replace(/√\(([^)]+)\)/g, "sqrt($1)")
     .replace(/√([a-zA-Z0-9]+)/g, "sqrt($1)")
 
+    // inverse trig
     .replace(/sin\^-1|sin⁻¹/gi, "asin")
     .replace(/cos\^-1|cos⁻¹/gi, "acos")
     .replace(/tan\^-1|tan⁻¹/gi, "atan")
 
+    // trig aliases (MUST COME EARLY)
+    .replace(/\bcot\b/gi, "1/tan")
+    .replace(/\bsec\b/gi, "1/cos")
+    .replace(/\bcsc\b/gi, "1/sin")
+
+    // trig powers: sin^2(x)
     .replace(/(sin|cos|tan)\^([0-9]+)\(([^)]+)\)/gi, "($1($3))^$2")
 
+    // exponentials
     .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
     .replace(/e\^([a-zA-Z0-9]+)/gi, "exp($1)")
 
+    // ln → log
     .replace(/\bln\b/gi, "log")
 
-    .replace(/\b(sin|cos|tan|asin|acos|atan|log|exp)([a-zA-Z0-9]+)\b/gi, "$1($2)")
+    // function without parentheses: sinx → sin(x)
+    .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|exp|sqrt|abs)([a-zA-Z0-9]+)\b/gi, "$1($2)")
 
+    // implicit multiplication
     .replace(/(\d)(sin|cos|tan|log|exp|sqrt|abs)/gi, "$1*$2")
     .replace(/(\d)([a-zA-Z])/g, "$1*$2")
     .replace(/(\^[0-9]+)([a-zA-Z])/g, "$1*$2")
@@ -46,12 +62,7 @@ function normalize(expr) {
     .replace(/([a-zA-Z])abs/g, "$1*abs")
     .replace(/(\d|x|y)\(/g, "$1*(")
     .replace(/\)([a-zA-Z])/g, ")*$1")
-    .replace(/\)\(/g, ")*(")
-
-    // trig aliases
-    .replace(/\bcot\b/gi, "1/tan")
-    .replace(/\bsec\b/gi, "1/cos")
-    .replace(/\bcsc\b/gi, "1/sin");
+    .replace(/\)\(/g, ")*(");
 }
 
 
