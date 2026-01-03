@@ -11,77 +11,49 @@ gridToggle.addEventListener("click", () => {
 
 /* ---------------- SAFE NORMALIZATION ---------------- */
 /* Minimal, conservative, never breaks valid math.js */
- function normalize(expr) {
+function normalize(expr) {
   if (!expr) return expr;
 
   return expr
-    // 1. remove spaces
     .replace(/\s+/g, "")
-
-    // 2. unicode powers
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
-
-    // 3. constants
     .replace(/\bpi\b/gi, "pi")
 
-    // 4. absolute value
     .replace(/\|\|([^|]+)\|\|/g, "abs(abs($1))")
     .replace(/\|([^|]+)\|/g, "abs($1)")
 
-    // 5. square root
     .replace(/√\(([^)]+)\)/g, "sqrt($1)")
     .replace(/√([a-zA-Z0-9]+)/g, "sqrt($1)")
 
-    // 6. inverse trig
     .replace(/sin\^-1|sin⁻¹/gi, "asin")
     .replace(/cos\^-1|cos⁻¹/gi, "acos")
     .replace(/tan\^-1|tan⁻¹/gi, "atan")
 
-    // 7. trig power: sin^2(x) → (sin(x))^2   (SAFE FORM ONLY)
     .replace(/(sin|cos|tan)\^([0-9]+)\(([^)]+)\)/gi, "($1($3))^$2")
 
-    // 8. exponential
     .replace(/e\^\(([^)]+)\)/gi, "exp($1)")
     .replace(/e\^([a-zA-Z0-9]+)/gi, "exp($1)")
 
-    // 9. ln → log
     .replace(/\bln\b/gi, "log")
 
-    // 10. sinx → sin(x)
-    .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|exp)([a-zA-Z0-9]+)\b/gi, "$1($2)")
+    .replace(/\b(sin|cos|tan|asin|acos|atan|log|exp)([a-zA-Z0-9]+)\b/gi, "$1($2)")
 
-    // 11. number-function: 2sin(x) → 2*sin(x)
     .replace(/(\d)(sin|cos|tan|log|exp|sqrt|abs)/gi, "$1*$2")
-
-    // 12. number-variable: 2x → 2*x
     .replace(/(\d)([a-zA-Z])/g, "$1*$2")
-
-    // 13. power-variable: x^2y → x^2*y
     .replace(/(\^[0-9]+)([a-zA-Z])/g, "$1*$2")
-
-    // 14. variable-constant: xpi → x*pi
     .replace(/([a-zA-Z])(pi)\b/gi, "$1*$2")
-
-    // 15. variable-abs: x|x| → x*abs(x)
     .replace(/([a-zA-Z])abs/g, "$1*abs")
-
-    // 16. SAFE variable-parenthesis: x(x+1) → x*(x+1)
-    // only variables, NOT function names
     .replace(/(\d|x|y)\(/g, "$1*(")
-
-    // 17. parenthesis-variable: (x+1)x → (x+1)*x
     .replace(/\)([a-zA-Z])/g, ")*$1")
-
-    // 18. parenthesis-parenthesis: )( → )*(
     .replace(/\)\(/g, ")*(")
 
-    // 19. Trig aliases
+    // trig aliases
     .replace(/\bcot\b/gi, "1/tan")
     .replace(/\bsec\b/gi, "1/cos")
-    .replace(/\bcsc\b/gi, "1/sin"):
-
+    .replace(/\bcsc\b/gi, "1/sin");
 }
+
 
 
 /* ---------------- MAIN PLOT FUNCTION ---------------- */
@@ -131,11 +103,7 @@ function plot() {
     const hasCotCsc = /(^|[^a-z])(cot|csc)([^a-z]|$)/i.test(expr);
    
 
-    if (
-      !Number.isFinite(y) ||
-      Math.abs(y) > 1e3 ||
-     (hasTan && Math.abs(Math.cos(x)) < 0.02) ||
-     (hasCotCsc && Math.abs(Math.sin(x)) < 0.02)
+    if (!Number.isFinite(y) || Math.abs(y) > 20 ||
     ) {
       ys.push(null);
     } else {
@@ -209,35 +177,8 @@ function plot() {
   );
 }
 
-/* Initial render  */
-Plotly.newPlot(
-  "graph",
-  [{
-    x: [-10, 10],
-    y: [0, 0],
-    mode: "lines",
-    line: { color: "rgba(0,0,0,0)" }, // invisible trace
-    hoverinfo: "skip"
-  }],
-  {
-    paper_bgcolor: "#0b1020",
-    plot_bgcolor: "#0b1020",
-    font: { color: "#e5e7eb" },
-    xaxis: {
-      showgrid: gridOn,
-      zeroline: true,
-      range: [-10, 10]
-    },
-    yaxis: {
-      showgrid: gridOn,
-      zeroline: true,
-      range: [-10, 10]
-    },
-    margin: { t: 20 }
-  },
-  { responsive: true, displaylogo: false }
-);
-
+plot(); // safe now because textarea is empty
 document.getElementById("year").textContent = new Date().getFullYear();
+
 
 
