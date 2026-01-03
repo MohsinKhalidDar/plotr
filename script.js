@@ -115,14 +115,22 @@ function plot() {
         let expr = normalize(line.split("=")[1]);
 
         const xs = [], ys = [];
-        for (let x = -10; x <= 10; x += 0.05) {
-          xs.push(x);
-          try {
-            ys.push(math.evaluate(expr, { x }));
-          } catch {
-            ys.push(null);
-          }
-        }
+         for (let x = -10; x <= 10; x += 0.05) {
+  xs.push(x);
+  try {
+    const y = math.evaluate(expr, { x });
+
+    // Break curve at asymptotes / discontinuities
+    if (!isFinite(y) || Math.abs(y) > 1000) {
+      ys.push(null);
+    } else {
+      ys.push(y);
+    }
+  } catch {
+    ys.push(null);
+  }
+}
+
 
         traces.push({
           x: xs,
