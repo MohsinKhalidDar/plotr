@@ -115,13 +115,13 @@ function plot() {
         let expr = normalize(line.split("=")[1]);
 
         const xs = [], ys = [];
-      for (let x = -10; x <= 10; x += 0.05) {
+      for (let x = -10; x <= 10; x += 0.03) {
         xs.push(x);
       try {
         const y = math.evaluate(expr, { x });
 
     // Break curve at asymptotes / discontinuities
-        if (!Number.isFinite(y) || Math.abs(y) > 1000) {
+        if (!Number.isFinite(y) || Math.abs(y) > 100) {
           ys.push(null);
        } else {
          ys.push(y);
