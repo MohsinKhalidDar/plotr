@@ -121,7 +121,7 @@ function plot() {
         const y = math.evaluate(expr, { x });
 
     // Break curve at asymptotes / discontinuities
-        if (!Number.isFinite(y) || Math.abs(y) > 100) {
+        if (!Number.isFinite(y) || Math.abs(y) > 10 || Math.abs(Math.cos(x)) < 0.02) {
           ys.push(null);
        } else {
          ys.push(y);
