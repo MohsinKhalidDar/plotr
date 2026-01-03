@@ -99,12 +99,9 @@ function plot() {
         const y = math.evaluate(expr, { x });
 
         
-    const hasTan = /(^|[^a-z])tan([^a-z]|$)/i.test(expr);
-    const hasCotCsc = /(^|[^a-z])(cot|csc)([^a-z]|$)/i.test(expr);
    
 
-    if (!Number.isFinite(y) || Math.abs(y) > 20 ||
-    ) {
+    if (!Number.isFinite(y) || Math.abs(y) > 20) {
       ys.push(null);
     } else {
      ys.push(y);
