@@ -74,12 +74,12 @@ gridToggle.addEventListener("click", () => {
     .replace(/\)([a-zA-Z])/g, ")*$1")
 
     // 18. parenthesis-parenthesis: )( → )*(
-    .replace(/\)\(/g, ")*(");
+    .replace(/\)\(/g, ")*(")
 
     // 19. Trig aliases
     .replace(/\bcot\b/gi, "1/tan")
     .replace(/\bsec\b/gi, "1/cos")
-    .replace(/\bcsc\b/gi, "1/sin")
+    .replace(/\bcsc\b/gi, "1/sin"):
 
 }
 
@@ -126,17 +126,14 @@ function plot() {
       try {
         const y = math.evaluate(expr, { x });
 
-    // Detect tan(x) specifically
+        
     const hasTan = /(^|[^a-z])tan([^a-z]|$)/i.test(expr);
     const hasCotCsc = /(^|[^a-z])(cot|csc)([^a-z]|$)/i.test(expr);
-    
-    if (x === 0) console.log(expr, hasTan);
    
 
-    // Break curve at asymptotes / discontinuities
     if (
       !Number.isFinite(y) ||
-      Math.abs(y) > 10 ||
+      Math.abs(y) > 1e3 ||
      (hasTan && Math.abs(Math.cos(x)) < 0.02) ||
      (hasCotCsc && Math.abs(Math.sin(x)) < 0.02)
     ) {
@@ -212,7 +209,35 @@ function plot() {
   );
 }
 
-/* Initial render */
-plot();
+/* Initial render  */
+Plotly.newPlot(
+  "graph",
+  [{
+    x: [-10, 10],
+    y: [0, 0],
+    mode: "lines",
+    line: { color: "rgba(0,0,0,0)" }, // invisible trace
+    hoverinfo: "skip"
+  }],
+  {
+    paper_bgcolor: "#0b1020",
+    plot_bgcolor: "#0b1020",
+    font: { color: "#e5e7eb" },
+    xaxis: {
+      showgrid: gridOn,
+      zeroline: true,
+      range: [-10, 10]
+    },
+    yaxis: {
+      showgrid: gridOn,
+      zeroline: true,
+      range: [-10, 10]
+    },
+    margin: { t: 20 }
+  },
+  { responsive: true, displaylogo: false }
+);
+
 document.getElementById("year").textContent = new Date().getFullYear();
+
 
