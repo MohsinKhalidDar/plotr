@@ -75,6 +75,12 @@ gridToggle.addEventListener("click", () => {
 
     // 18. parenthesis-parenthesis: )( → )*(
     .replace(/\)\(/g, ")*(");
+
+    // 19. Trig aliases
+    .replace(/\bcot\b/gi, "1/tan")
+    .replace(/\bsec\b/gi, "1/cos")
+    .replace(/\bcsc\b/gi, "1/sin")
+
 }
 
 
@@ -122,6 +128,7 @@ function plot() {
 
     // Detect tan(x) specifically
     const hasTan = /(^|[^a-z])tan([^a-z]|$)/i.test(expr);
+    const hasCotCsc = /(^|[^a-z])(cot|csc)([^a-z]|$)/i.test(expr);
     
     if (x === 0) console.log(expr, hasTan);
    
@@ -130,7 +137,8 @@ function plot() {
     if (
       !Number.isFinite(y) ||
       Math.abs(y) > 10 ||
-     (hasTan && Math.abs(Math.cos(x)) < 0.02)
+     (hasTan && Math.abs(Math.cos(x)) < 0.02) ||
+     (hasCotCsc && Math.abs(Math.sin(x)) < 0.02)
     ) {
       ys.push(null);
     } else {
