@@ -9,14 +9,13 @@ gridToggle.addEventListener("click", () => {
   plot();
 });
 
-/* ---------------- SAFE NORMALIZATION ---------------- */
-/* Minimal, conservative, never breaks valid math.js */
+/* ---------------- NORMALIZATION ---------------- */
  
 function normalize(expr) {
   if (!expr) return expr;
 
   return expr
-    /* ---------------- BASIC CLEANUP ---------------- */
+    /* ---------------- CLEANUP ---------------- */
     .replace(/\s+/g, "")
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
@@ -176,7 +175,7 @@ function plot() {
         });
       }
     } catch {
-      // Ignore invalid equations safely
+      // Ignore invalid equations  
     }
   });
 
@@ -196,7 +195,7 @@ function plot() {
   );
 }
 
-plot(); // safe now because textarea is empty
+plot();  
 document.getElementById("year").textContent = new Date().getFullYear();
 
 
